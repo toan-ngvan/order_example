@@ -1,0 +1,25 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: cirrusci/flutter:v1.9.1-hotfix.6
+
+    steps:
+      - checkout
+
+      - run:
+          name: Get packages
+          command: flutter packages get
+
+      - run:
+          name: Install danger
+          command: sudo gem install danger-flutter_lint
+
+      - run:
+          name: Check convention
+          command: flutter analyze > flutter_analyze_report.txt
+
+      - run:
+          name: Run danger
+          when: always
+          command: danger
