@@ -1,0 +1,6 @@
+include: package:pedantic/analysis_options.yaml
+
+linter:
+  rules:
+    unawaited_futures: false
+    deprecated_member_use: false
