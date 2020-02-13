@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:order_example/pages/menu.dart';
 
 class FoodDetail extends StatefulWidget {
   @override
