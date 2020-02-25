@@ -1,34 +1,9 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
+import 'package:order_example/resources/dummyData.dart' as data;
 
 const double APP_BAR_DEFAULT_HEIGHT = 56;
-const List foods = [
-  {
-    'price': 10.0,
-    'name': 'Dummy 1',
-  },
-  {
-    'price': 8.7,
-    'name': 'Dummy 2',
-  },
-  {
-    'price': 9.5,
-    'name': 'Dummy 3',
-  },
-  {
-    'price': 11.2,
-    'name': 'Dummy 4',
-  },
-  {
-    'price': 5.8,
-    'name': 'Lorem Ipsum is simply dummy',
-  },
-  {
-    'price': 5.8,
-    'name': 'Lorem Ipsum is simply dummy',
-  },
-];
 const double FOOD_RADIUS = 90;
 const double CURVE_HEIGHT = FOOD_RADIUS * 2;
 const double FOOD_PADDING_TOP = 20;
@@ -39,7 +14,10 @@ class Menu extends StatefulWidget {
 }
 
 class _MenuState extends State<Menu> with TickerProviderStateMixin {
+  AppBar _appBar;
+  BottomAppBar _bottomAppBar;
   PageController _pageViewController;
+  List<Map> foods;
   double _screenWidth = window.physicalSize.width / window.devicePixelRatio;
   double _currentPageValue = 0;
   double _foodRadius = FOOD_RADIUS;
@@ -54,6 +32,7 @@ class _MenuState extends State<Menu> with TickerProviderStateMixin {
     _pageviewDistance = _pageviewRatio * _screenWidth;
     _translateDistance = _pageviewDistance / 2 - _foodRadius;
     _rotateDistance = _pageviewDistance - _translateDistance;
+    foods = data.foods;
 
     _pageViewController =
         PageController(initialPage: _currentPage, viewportFraction: 0.7)
@@ -73,7 +52,7 @@ class _MenuState extends State<Menu> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    AppBar appBar = AppBar(
+    _appBar = AppBar(
       elevation: 0,
       title: Text('Food'),
       centerTitle: true,
@@ -85,66 +64,75 @@ class _MenuState extends State<Menu> with TickerProviderStateMixin {
       ],
       backgroundColor: Colors.redAccent,
     );
-    return Scaffold(
-      appBar: appBar,
-      body: Stack(
-        children: <Widget>[
-          CurvedShape(),
-          Padding(
-            padding: const EdgeInsets.only(top: FOOD_PADDING_TOP),
-            child: Center(
-              child: Column(
-                children: <Widget>[
-                  _renderMenu(),
-                ],
+    _bottomAppBar = BottomAppBar(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 20),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            RaisedButton(
+              padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(30.0),
               ),
+              color: Colors.orange,
+              child: Text(
+                'ORDER NOW',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                ),
+              ),
+              onPressed: () {},
             ),
-          ),
-          _renderPrice(),
-        ],
-      ),
-      bottomNavigationBar: BottomAppBar(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 20),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              RaisedButton(
-                padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(30.0),
-                ),
-                color: Colors.orange,
-                child: Text(
-                  'ORDER NOW',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                  ),
-                ),
-                onPressed: () {},
-              ),
-            ],
-          ),
+          ],
         ),
       ),
+    );
+    return Scaffold(
+      appBar: _appBar,
+      body: FutureBuilder(
+          future: null,
+          builder: (context, snapshot) {
+            return Stack(
+              children: <Widget>[
+                CurvedShape(),
+                Padding(
+                  padding: const EdgeInsets.only(top: FOOD_PADDING_TOP),
+                  child: Center(
+                    child: Column(
+                      children: <Widget>[
+                        _renderMenu(),
+                      ],
+                    ),
+                  ),
+                ),
+                _renderPrice(),
+                _renderCart(),
+              ],
+            );
+          }),
+      bottomNavigationBar: _bottomAppBar,
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
-          AnimationController foodAnimationController = AnimationController(
+          final AnimationController foodAnimationController =
+              AnimationController(
             vsync: this,
             duration: Duration(milliseconds: 800),
           );
-          Animation foodAnimation = Tween<double>(begin: 1, end: 0).animate(
+          final Animation foodAnimation =
+              Tween<double>(begin: 1, end: 0).animate(
             CurvedAnimation(
               parent: foodAnimationController,
               curve: Curves.easeOutQuart,
             ),
           );
-          OverlayState overlayState = Overlay.of(context);
-          OverlayEntry overlayEntry = OverlayEntry(
+          final appBarHeight = _appBar.preferredSize.height;
+          final OverlayState overlayState = Overlay.of(context);
+          final OverlayEntry overlayEntry = OverlayEntry(
             builder: (_) {
               return Positioned(
-                top: appBar.preferredSize.height + FOOD_PADDING_TOP,
+                top: appBarHeight + FOOD_PADDING_TOP,
                 left: _screenWidth / 2 - FOOD_RADIUS,
                 child: AnimatedBuilder(
                   animation: foodAnimation,
@@ -161,8 +149,7 @@ class _MenuState extends State<Menu> with TickerProviderStateMixin {
                     double dx = math.pow(t, 3) * (_screenWidth / 2 - 20);
                     double dy =
                         -2 * (1 - t) * t * (FOOD_RADIUS + FOOD_PADDING_TOP) -
-                            math.pow(t, 3) *
-                                (FOOD_RADIUS + appBar.preferredSize.height / 2);
+                            math.pow(t, 3) * (FOOD_RADIUS + appBarHeight / 2);
                     return Transform.translate(
                       offset: Offset(dx, dy),
                       child: Transform.scale(
@@ -186,8 +173,7 @@ class _MenuState extends State<Menu> with TickerProviderStateMixin {
             },
           );
           overlayState.insert(overlayEntry);
-          foodAnimationController.forward();
-          await Future.delayed(Duration(milliseconds: 1000));
+          await foodAnimationController.forward();
           foodAnimationController.dispose();
           overlayEntry.remove();
         },
@@ -385,6 +371,23 @@ class _MenuState extends State<Menu> with TickerProviderStateMixin {
         ),
       ),
     );
+  }
+
+  _renderCart() {
+    OverlayState overlayState = Overlay.of(context);
+    OverlayEntry overlayEntry = OverlayEntry(
+      builder: (context) {
+        return Positioned(
+          bottom: -10,
+          child: Container(
+            width: 200,
+            height: FOOD_RADIUS,
+            color: Colors.red,
+          ),
+        );
+      },
+    );
+    overlayState.insert(overlayEntry);
   }
 }
 
